@@ -7,3 +7,4 @@ pip install sympy numpy matplotlib scipy
 pip install PyQt5-tools
 al abrir el proyecto en VS Code hacemos Ctrl+Shift+P, escribiremos Python: Select Interpreter y seleccionaremos: Python 3.11.9 Global
 Correremos el proyecto con un cmd redirigiendonos con cd a la carpeta de nuestro proyecto y ejecutaremos: python msimpson.py
+#
