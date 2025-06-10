@@ -220,7 +220,7 @@ class GeoGebraApp(QMainWindow):
         left_layout.addLayout(limites_layout)
 
         # Botón calcular
-        self.btn_calcular = QPushButton("Calcular Área entre curvas")
+        self.btn_calcular = QPushButton("Calcular ")
         self.btn_calcular.clicked.connect(self.calcular_area)
         left_layout.addWidget(self.btn_calcular)
 
@@ -440,15 +440,13 @@ class GeoGebraApp(QMainWindow):
         self.canvas.draw()
 
     def calcular_area(self):
-        if len(self.entradas) < 2:
-            self.resultado.setText("Ingresa al menos dos funciones para comparar.")
+        if len(self.entradas) < 1:
+            self.resultado.setText("Ingresa al menos una función.")
             return
 
         try:
             expr1 = sympify(self.entradas[0].entrada.text())
-            expr2 = sympify(self.entradas[1].entrada.text())
             f1 = lambdify(x, expr1, 'numpy')
-            f2 = lambdify(x, expr2, 'numpy')
 
             # Toma los límites de los campos de entrada
             try:
@@ -467,36 +465,50 @@ class GeoGebraApp(QMainWindow):
                 if n % 2 != 0:
                     n += 1
                 h = (b - a) / n
-                x = np.linspace(a, b, n+1)
-                y = f(x)
-                integral = h/3 * np.sum(y[0:-1:2] + 4*y[1::2] + y[2::2])
+                x_vals = np.linspace(a, b, n+1)
+                y_vals = f(x_vals)
+                integral = h/3 * np.sum(y_vals[0:-1:2] + 4*y_vals[1::2] + y_vals[2::2])
                 return integral
 
-            h = lambda x: np.abs(f1(x) - f2(x))
-            area = simpson_integration(h, a, b)
-
-            # Muestra el resultado solo en el gráfico, no en el label
-            self.resultado.setText("")
-
-            # Sombrea solo entre los límites dados
-            x_fill = np.linspace(a, b, 100)
-            self.ax.fill_between(x_fill, f1(x_fill), f2(x_fill),
-                                 where=(f1(x_fill) > f2(x_fill)),
-                                 color='red', alpha=0.3)
-
-            # Agrega el resultado del área en LaTeX dentro del gráfico
-            area_latex = f"$\\text{{Área}} = {area:.6f}$"
-            # Lo coloca en la esquina superior derecha del gráfico
-            self.ax.annotate(
-                area_latex,
-                xy=(0.98, 0.98),
-                xycoords='axes fraction',
-                fontsize=16,
-                color='red',
-                ha='right',
-                va='top',
-                bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="red", lw=1, alpha=0.8)
-            )
+            if len(self.entradas) == 1:
+                # Área bajo la curva respecto al eje x
+                area = simpson_integration(f1, a, b)
+                self.resultado.setText("")
+                x_fill = np.linspace(a, b, 100)
+                self.ax.fill_between(x_fill, f1(x_fill), 0,
+                                     color='red', alpha=0.3)
+                area_latex = f"$\\text{{Área}} = {area:.6f}$"
+                self.ax.annotate(
+                    area_latex,
+                    xy=(0.98, 0.98),
+                    xycoords='axes fraction',
+                    fontsize=16,
+                    color='red',
+                    ha='right',
+                    va='top',
+                    bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="red", lw=1, alpha=0.8)
+                )
+            else:
+                expr2 = sympify(self.entradas[1].entrada.text())
+                f2 = lambdify(x, expr2, 'numpy')
+                h = lambda x: np.abs(f1(x) - f2(x))
+                area = simpson_integration(h, a, b)
+                self.resultado.setText("")
+                x_fill = np.linspace(a, b, 100)
+                self.ax.fill_between(x_fill, f1(x_fill), f2(x_fill),
+                                     where=(f1(x_fill) > f2(x_fill)),
+                                     color='red', alpha=0.3)
+                area_latex = f"$\\text{{Área}} = {area:.6f}$"
+                self.ax.annotate(
+                    area_latex,
+                    xy=(0.98, 0.98),
+                    xycoords='axes fraction',
+                    fontsize=16,
+                    color='red',
+                    ha='right',
+                    va='top',
+                    bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="red", lw=1, alpha=0.8)
+                )
 
             self.canvas.draw()
 
